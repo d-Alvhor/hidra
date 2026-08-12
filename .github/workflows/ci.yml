@@ -1,0 +1,27 @@
+# The security contract runs on every push. If the fail-closed invariant breaks,
+# the build breaks — that is the whole point of pinning it in CI.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Routing invariants + security contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No dependencies to install: the router is dependency-free by design.
+      - name: Run the test suite
+        run: node --test *.test.mjs
+
+      # The demo must keep working: it is the artifact reviewers actually run.
+      - name: Smoke-test the demo
+        run: ./demo.sh
