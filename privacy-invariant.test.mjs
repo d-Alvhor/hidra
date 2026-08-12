@@ -42,7 +42,8 @@ describe("Security contract — fail-closed sovereignty", () => {
       process.execPath,
       [HIDRA, "--route-only", "--privacy", "sensitive", "--intent", "reason", "--complexity", "medium",
        "summarize this private document"],
-      { encoding: "utf8" },
+      // declare a local runtime as present; the ABORT case above deliberately declares nothing
+      { encoding: "utf8", env: { ...process.env, HIDRA_ASSUME_AVAILABLE: "ollama" } },
     );
     const out = (r.stderr || "") + (r.stdout || "");
     assert.match(out, /tier=local/);

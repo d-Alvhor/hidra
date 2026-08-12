@@ -8,12 +8,18 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const AM = join(dirname(fileURLToPath(import.meta.url)), "hidra.mjs");
+// Routing-policy tests must be deterministic on any machine (CI, a reviewer's laptop),
+// so we declare every backend as present. Availability itself is covered by
+// privacy-invariant.test.mjs, which deliberately runs WITHOUT this override.
+const ALL_BACKENDS = "ollama,claude,codex,gemini,openrouter,nvidia";
+const ENV = { ...process.env, HIDRA_ASSUME_AVAILABLE: ALL_BACKENDS };
+
 function route(flags) {
-  const r = spawnSync("node", [AM, "--route-only", ...flags, "tarea de prueba"], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, [AM, "--route-only", ...flags, "tarea de prueba"], { encoding: "utf8", env: ENV });
   return (r.stderr || "") + (r.stdout || "");
 }
 function routeTask(task, flags) {
-  const r = spawnSync("node", [AM, "--route-only", ...flags, task], { encoding: "utf8" });
+  const r = spawnSync(process.execPath, [AM, "--route-only", ...flags, task], { encoding: "utf8", env: ENV });
   return (r.stderr || "") + (r.stdout || "");
 }
 
@@ -55,7 +61,7 @@ test("keyword sensible sin --privacy → local (unión heurística fail-closed)"
 // NVIDIA NIM (2026-07-04): tier cloud-gratis. Se probó con env NVIDIA_API_KEY forzado (dummy,
 // --route-only no llama a la API real) para no depender de si el vault ya lo tiene cargado.
 test("con NVIDIA_API_KEY presente, un intent barato/trivial puede elegir nvidia", () => {
-  const r = spawnSync("node", [AM, "--route-only", "--privacy", "normal", "--intent", "summarize", "--complexity", "trivial", "tarea de prueba"], { encoding: "utf8", env: { ...process.env, NVIDIA_API_KEY: "test-key-dummy" } });
+  const r = spawnSync(process.execPath, [AM, "--route-only", "--privacy", "normal", "--intent", "summarize", "--complexity", "trivial", "tarea de prueba"], { encoding: "utf8", env: { ...ENV, NVIDIA_API_KEY: "test-key-dummy" } });
   const o = (r.stderr || "") + (r.stdout || "");
   assert.match(o, /tier=cheap/);
   assert.match(o, /nvidia\//);
@@ -66,7 +72,7 @@ test("con NVIDIA_API_KEY presente, un intent barato/trivial puede elegir nvidia"
 // concreto (no solo tier=local) incluso con NVIDIA_API_KEY presente. Esto es lo que hace innecesario
 // un tier 'private' aparte: el filtro es de código, no depende de qué haya en la lista del tier.
 test("privacy=sensitive sigue resolviendo a ollama en concreto, aunque NVIDIA_API_KEY esté presente", () => {
-  const r = spawnSync("node", [AM, "--route-only", "--privacy", "sensitive", "--intent", "code-edit", "--complexity", "hard", "tarea de prueba"], { encoding: "utf8", env: { ...process.env, NVIDIA_API_KEY: "test-key-dummy" } });
+  const r = spawnSync(process.execPath, [AM, "--route-only", "--privacy", "sensitive", "--intent", "code-edit", "--complexity", "hard", "tarea de prueba"], { encoding: "utf8", env: { ...ENV, NVIDIA_API_KEY: "test-key-dummy" } });
   const o = (r.stderr || "") + (r.stdout || "");
   assert.match(o, /tier=local/);
   assert.match(o, /→ ollama\//);

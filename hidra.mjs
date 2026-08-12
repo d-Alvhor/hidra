@@ -33,7 +33,14 @@ function ollamaUp() {
   try { return (spawnSync("curl", ["-s", "--max-time", "2", "http://localhost:11434/api/version"], { encoding: "utf8" }).stdout || "").includes("version"); }
   catch { return false; }
 }
+// HIDRA_ASSUME_AVAILABLE: comma-separated backend names that are treated as available
+// regardless of what is installed on this machine. Exists so routing POLICY can be tested
+// deterministically anywhere (CI, a reviewer's laptop) without installing every runtime.
+// It never relaxes the sovereignty rule: it only declares which backends exist.
+const ASSUMED = new Set((process.env.HIDRA_ASSUME_AVAILABLE || "").split(",").map((x) => x.trim()).filter(Boolean));
+
 function available(backend) {
+  if (ASSUMED.has(backend)) return true;
   const a = policy.availability[backend];
   if (!a) return false;
   if (a.cmd && !cmdExists(a.cmd)) return false;
