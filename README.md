@@ -1,5 +1,7 @@
 # HIDRA — a policy-driven routing layer for AI workload classification
 
+[![CI](https://github.com/d-Alvhor/hidra/actions/workflows/ci.yml/badge.svg)](https://github.com/d-Alvhor/hidra/actions/workflows/ci.yml)
+
 HIDRA is a lightweight routing layer that classifies each AI task and dispatches it
 to the cheapest backend allowed by an explicit policy — under a **fail-closed data
 sovereignty contract**: a task classified as sensitive may only run on a local model,
@@ -76,8 +78,13 @@ env PATH="/usr/bin:/bin" "$(command -v node)" hidra.mjs --privacy sensitive --in
 ## Run the tests
 
 ```bash
-node --test *.test.mjs
+node --test *.test.mjs        # 18 tests, no dependencies, no API keys, works on a clean machine
 ```
+
+Routing-policy tests declare which backends exist via `HIDRA_ASSUME_AVAILABLE`, so the decision
+under test is the *policy*, identical on any machine. The sovereignty test deliberately declares
+nothing: it must abort for real. Both run in CI on every push — **if the fail-closed invariant
+breaks, the build breaks.**
 
 ## Layout
 
