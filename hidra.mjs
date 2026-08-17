@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const policy = JSON.parse(readFileSync(join(HERE, "policy.json"), "utf8"));
+const policy = JSON.parse(readFileSync(process.env.HIDRA_POLICY || join(HERE, "policy.json"), "utf8"));
 const LOG = join(HERE, "hidra.log");
 const ACTIVE = join(HERE, "active.json");
 const WIN = process.platform === "win32";

@@ -19,7 +19,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const policy = JSON.parse(readFileSync(join(HERE, "policy.json"), "utf8"));
+// HIDRA_POLICY: la config es del OPERADOR, no del código. El repo trae una policy de
+// referencia (la de la demo); cada máquina apunta la suya por env sin ensuciar el clon.
+const policy = JSON.parse(readFileSync(process.env.HIDRA_POLICY || join(HERE, "policy.json"), "utf8"));
 const LOG = join(HERE, "agentmesh.log");
 const ACTIVE = join(HERE, "active.json");
 const WIN = process.platform === "win32";

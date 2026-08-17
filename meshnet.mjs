@@ -18,7 +18,7 @@ import { dirname, join } from "node:path";
 import { limpiezaAlArrancar } from "./retencion.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const policy = JSON.parse(readFileSync(join(HERE, "policy.json"), "utf8"));
+const policy = JSON.parse(readFileSync(process.env.HIDRA_POLICY || join(HERE, "policy.json"), "utf8"));
 const AM = join(HERE, "agentmesh.mjs");
 const HOME = process.env.HOME || "";
 const expand = (p) => p.replace(/^~/, HOME);
