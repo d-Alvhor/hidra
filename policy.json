@@ -1,317 +1,68 @@
 {
+  "_comment": "Cerebro de agentmesh. Cada tier es una LISTA de candidatos en orden de preferencia; se usa el primero DISPONIBLE. Así, si no pagas un backend, cae al siguiente solo.",
+
   "paidEnv": "AGENTMESH_PAID",
+  "_paid": "El backend de pago del mes (codex|gemini|openrouter|none). Se fija con 'mesh use <x>' o la env AGENTMESH_PAID. Si está en la lista de un tier, se mueve al frente. Álvaro: openrouter (DeepSeek V4 y demás).",
+
   "tiers": {
-    "local": [
-      {
-        "backend": "ollama",
-        "model": "llama3.1:8b"
-      },
-      {
-        "backend": "nvidia",
-        "model": "meta/llama-3.3-70b-instruct"
-      },
-      {
-        "backend": "claude",
-        "model": "sonnet"
-      }
-    ],
-    "cheap": [
-      {
-        "backend": "nvidia",
-        "model": "meta/llama-3.3-70b-instruct"
-      },
-      {
-        "backend": "claude",
-        "model": "sonnet"
-      },
-      {
-        "backend": "openrouter",
-        "model": "deepseek/deepseek-chat"
-      },
-      {
-        "backend": "ollama",
-        "model": "llama3.1:8b"
-      }
-    ],
-    "research": [
-      {
-        "backend": "nvidia",
-        "model": "deepseek-ai/deepseek-v4-flash"
-      },
-      {
-        "backend": "claude",
-        "model": "sonnet"
-      },
-      {
-        "backend": "openrouter",
-        "model": "google/gemini-2.5-flash"
-      },
-      {
-        "backend": "ollama",
-        "model": "llama3.1:8b"
-      }
-    ],
-    "code": [
-      {
-        "backend": "claude",
-        "model": "sonnet"
-      },
-      {
-        "backend": "nvidia",
-        "model": "qwen/qwen3.5-122b-a10b"
-      },
-      {
-        "backend": "codex",
-        "model": "gpt-5"
-      },
-      {
-        "backend": "openrouter",
-        "model": "deepseek/deepseek-chat"
-      }
-    ],
-    "frontier": [
-      {
-        "backend": "claude",
-        "model": "opus"
-      },
-      {
-        "backend": "nvidia",
-        "model": "deepseek-ai/deepseek-v4-pro"
-      },
-      {
-        "backend": "codex",
-        "model": "gpt-5"
-      },
-      {
-        "backend": "openrouter",
-        "model": "deepseek/deepseek-r1"
-      }
-    ]
+    "local":    [ { "backend": "ollama", "model": "llama3.1:8b" }, { "backend": "nvidia", "model": "meta/llama-3.3-70b-instruct" }, { "backend": "claude", "model": "sonnet" } ],
+    "cheap":    [ { "backend": "nvidia", "model": "meta/llama-3.3-70b-instruct" }, { "backend": "claude", "model": "sonnet" }, { "backend": "openrouter", "model": "deepseek/deepseek-chat" }, { "backend": "ollama", "model": "llama3.1:8b" } ],
+    "research": [ { "backend": "nvidia", "model": "deepseek-ai/deepseek-v4-flash" }, { "backend": "claude", "model": "sonnet" }, { "backend": "openrouter", "model": "google/gemini-2.5-flash" }, { "backend": "ollama", "model": "llama3.1:8b" } ],
+    "code":     [ { "backend": "claude", "model": "sonnet" }, { "backend": "nvidia", "model": "qwen/qwen3.5-122b-a10b" }, { "backend": "codex", "model": "gpt-5" }, { "backend": "openrouter", "model": "deepseek/deepseek-chat" } ],
+    "frontier": [ { "backend": "claude", "model": "opus" }, { "backend": "nvidia", "model": "deepseek-ai/deepseek-v4-pro" }, { "backend": "codex", "model": "gpt-5" }, { "backend": "openrouter", "model": "deepseek/deepseek-r1" } ]
   },
+
+  "_fusion": "OpenRouter Fusion ON-DEMAND (mesh --fusion / --fusion-pro). Panel multi-modelo + juez; NO entra en el routing automatico; cuesta ~4-5x una llamada (tope $10/key protege). --fusion usa el panel barato de aqui; --fusion-pro usa el preset Quality de OpenRouter (Opus+GPT+Gemini Pro).",
   "fusion": {
-    "autoCheapIntents": [
-      "research",
-      "search",
-      "market"
-    ],
+    "autoCheapIntents": [ "research", "search", "market" ],
     "_autoCheapIntents": "intents donde mesh AUTO-LANZA el panel barato SIN preguntar (~0.5c, no sensible). Vaciar [] = volver a solo-sugerir. El premium (--fusion-pro) NUNCA es automatico.",
     "cheap": {
-      "analysis_models": [
-        "deepseek/deepseek-chat",
-        "google/gemini-2.5-flash",
-        "moonshotai/kimi-k2.6"
-      ],
+      "analysis_models": [ "deepseek/deepseek-chat", "google/gemini-2.5-flash", "moonshotai/kimi-k2.6" ],
       "judge": "deepseek/deepseek-chat"
     },
     "_pro_note": "OpenAI (gpt-5.x/4.1) da 'Provider returned error' en esta key (necesita BYOK). Panel premium viable y diverso sin OpenAI. Reañadir un openai/* solo si se configura el provider key en OpenRouter.",
     "pro": {
-      "analysis_models": [
-        "anthropic/claude-opus-4.8",
-        "google/gemini-2.5-pro",
-        "deepseek/deepseek-r1"
-      ],
+      "analysis_models": [ "anthropic/claude-opus-4.8", "google/gemini-2.5-pro", "deepseek/deepseek-r1" ],
       "judge": "anthropic/claude-opus-4.8"
     }
   },
+
+  "_nvidia": "Tier cloud-gratis (NIM, build.nvidia.com): 80+ modelos OpenAI-compat gratis con rate-limit ~40 req/min, uso dev/eval (no producción). Key en vault age (NVIDIA_API_KEY, ya cargada 2026-07-04). Ahorra cuota de la suscripción Claude: en cheap/research/local va DELANTE de claude; en code/frontier va DETRÁS (calidad manda). privacy=sensitive sigue SIEMPRE ollama-only vía el filtro de agentmesh.mjs (independiente de qué haya en el tier local) — no hace falta un tier 'private' aparte.",
+  "_availability": "Cómo se sabe si un backend está usable AHORA (sin gastar). cmd = binario en PATH; anyOf = además, al menos una de estas (env var o fichero).",
   "availability": {
-    "ollama": {
-      "cmd": "ollama"
-    },
-    "claude": {
-      "cmd": "claude"
-    },
-    "gemini": {
-      "cmd": "gemini",
-      "anyOf": [
-        {
-          "env": "GEMINI_API_KEY"
-        },
-        {
-          "file": "~/.gemini/oauth_creds.json"
-        },
-        {
-          "file": "~/.gemini/google_accounts.json"
-        }
-      ]
-    },
-    "codex": {
-      "cmd": "codex",
-      "anyOf": [
-        {
-          "file": "~/.codex/auth.json"
-        },
-        {
-          "file": "~/.config/codex/auth.json"
-        },
-        {
-          "env": "OPENAI_API_KEY"
-        }
-      ]
-    },
-    "openrouter": {
-      "anyOf": [
-        {
-          "env": "OPENROUTER_API_KEY"
-        }
-      ]
-    },
-    "nvidia": {
-      "anyOf": [
-        {
-          "env": "NVIDIA_API_KEY"
-        }
-      ]
-    }
+    "ollama":   { "cmd": "ollama" },
+    "claude":   { "cmd": "claude" },
+    "gemini":   { "cmd": "gemini", "anyOf": [ { "env": "GEMINI_API_KEY" }, { "file": "~/.gemini/oauth_creds.json" }, { "file": "~/.gemini/google_accounts.json" } ] },
+    "codex":    { "cmd": "codex", "anyOf": [ { "file": "~/.codex/auth.json" }, { "file": "~/.config/codex/auth.json" }, { "env": "OPENAI_API_KEY" } ] },
+    "openrouter": { "anyOf": [ { "env": "OPENROUTER_API_KEY" } ] },
+    "nvidia":   { "anyOf": [ { "env": "NVIDIA_API_KEY" } ] }
   },
+
   "routes": [
-    {
-      "when": {
-        "privacy": "sensitive"
-      },
-      "use": "local",
-      "why": "datos sensibles -> nunca a la nube"
-    },
-    {
-      "when": {
-        "intent": [
-          "format",
-          "classify",
-          "extract",
-          "translate",
-          "rename",
-          "local-bulk"
-        ],
-        "complexity": [
-          "trivial",
-          "medium"
-        ]
-      },
-      "use": "local",
-      "why": "mecanico/volumen -> modelo local gratis"
-    },
-    {
-      "when": {
-        "intent": [
-          "summarize",
-          "draft",
-          "email"
-        ],
-        "complexity": [
-          "trivial",
-          "medium"
-        ]
-      },
-      "use": "cheap",
-      "why": "texto medio -> tier barato"
-    },
-    {
-      "when": {
-        "intent": [
-          "research",
-          "search",
-          "market"
-        ]
-      },
-      "use": "research",
-      "why": "research/contexto grande"
-    },
-    {
-      "when": {
-        "intent": [
-          "code-edit",
-          "code-review",
-          "refactor",
-          "tests",
-          "bugfix"
-        ]
-      },
-      "use": "code",
-      "why": "codigo en repo"
-    },
-    {
-      "when": {
-        "intent": [
-          "reason",
-          "architecture",
-          "debug-hard",
-          "plan",
-          "strategy"
-        ],
-        "complexity": [
-          "hard"
-        ]
-      },
-      "use": "frontier",
-      "why": "razonamiento dificil"
-    },
-    {
-      "default": "cheap",
-      "why": "por defecto, el tier barato (nunca Opus por defecto)"
-    }
+    { "when": { "privacy": "sensitive" }, "use": "local", "why": "datos sensibles -> nunca a la nube" },
+    { "when": { "intent": ["format","classify","extract","translate","rename","local-bulk"], "complexity": ["trivial","medium"] }, "use": "local", "why": "mecanico/volumen -> modelo local gratis" },
+    { "when": { "intent": ["summarize","draft","email"], "complexity": ["trivial","medium"] }, "use": "cheap", "why": "texto medio -> tier barato" },
+    { "when": { "intent": ["research","search","market"] }, "use": "research", "why": "research/contexto grande" },
+    { "when": { "intent": ["code-edit","code-review","refactor","tests","bugfix"] }, "use": "code", "why": "codigo en repo" },
+    { "when": { "intent": ["reason","architecture","debug-hard","plan","strategy"], "complexity": ["hard"] }, "use": "frontier", "why": "razonamiento dificil" },
+    { "default": "cheap", "why": "por defecto, el tier barato (nunca Opus por defecto)" }
   ],
+
   "machineRules": [
-    {
-      "default": "mac",
-      "why": "Local by default; the routing tiers stay machine-agnostic."
-    }
+    { "default": "mac", "why": "Todo en el Mac por defecto. La torre es OPT-IN (--machine torre / meshnet): su Ollama es desktop-only (headless por SSH falla), no es destino automatico fiable. Util on-demand para lotes en paralelo cuando esta encendida." }
   ],
+
   "backends": {
-    "ollama": {
-      "argv": [
-        "ollama",
-        "run",
-        "{model}"
-      ],
-      "stdin": true,
-      "remoteOk": true
-    },
-    "claude": {
-      "argv": [
-        "claude",
-        "-p",
-        "--model",
-        "{model}"
-      ],
-      "stdin": true,
-      "remoteOk": true
-    },
-    "codex": {
-      "argv": [
-        "codex",
-        "exec",
-        "{prompt}"
-      ],
-      "stdin": false,
-      "remoteOk": false
-    },
-    "gemini": {
-      "argv": [
-        "gemini",
-        "-p",
-        "{prompt}"
-      ],
-      "stdin": false,
-      "remoteOk": false
-    },
-    "openrouter": {
-      "argv": [
-        "__openrouter_api__"
-      ],
-      "stdin": true,
-      "remoteOk": false
-    },
-    "nvidia": {
-      "argv": [
-        "__nvidia_api__"
-      ],
-      "stdin": true,
-      "remoteOk": false
-    }
+    "ollama":   { "argv": ["ollama","run","{model}"],          "stdin": true,  "remoteOk": true },
+    "claude":   { "argv": ["claude","-p","--model","{model}"], "stdin": true,  "remoteOk": true },
+    "codex":    { "argv": ["codex","exec","{prompt}"],         "stdin": false, "remoteOk": false },
+    "gemini":   { "argv": ["gemini","-p","{prompt}"],          "stdin": false, "remoteOk": false },
+    "openrouter": { "argv": ["__openrouter_api__"],            "stdin": true,  "remoteOk": false },
+    "nvidia":   { "argv": ["__nvidia_api__"],                  "stdin": true,  "remoteOk": false }
   },
+
   "machines": {
-    "mac": {
-      "type": "local",
-      "meshPath": "~/mac-setup/agentmesh/agentmesh.mjs"
-    }
+    "mac":   { "type": "local", "meshPath": "~/mac-setup/agentmesh/agentmesh.mjs" },
+    "torre": { "type": "ssh", "host": "torre", "meshPath": "agentmesh/agentmesh.mjs" }
   }
 }
