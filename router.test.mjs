@@ -9,6 +9,11 @@ import { dirname, join } from "node:path";
 import { mkdtempSync, mkdirSync, chmodSync, statSync, existsSync, readdirSync, readFileSync, writeFileSync, utimesSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 
+// En CI no hay ningún runtime instalado: se declaran los backends por env (la misma
+// técnica que demo.sh) para que la POLÍTICA sea testeable en cualquier máquina. Las
+// guardas de sensitive-remoto no dependen de esto: abortan antes de mirar disponibilidad.
+process.env.HIDRA_ASSUME_AVAILABLE ||= "ollama,claude,codex,gemini,openrouter,nvidia";
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const AM = join(HERE, "agentmesh.mjs");
 const MESHNET = join(HERE, "meshnet.mjs");

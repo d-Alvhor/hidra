@@ -35,7 +35,14 @@ function ollamaUp() {
   try { return (spawnSync("curl", ["-s", "--max-time", "2", "http://localhost:11434/api/version"], { encoding: "utf8" }).stdout || "").includes("version"); }
   catch { return false; }
 }
+// HIDRA_ASSUME_AVAILABLE: backends declarados disponibles por env, para poder testear la
+// POLÍTICA de routing en cualquier máquina (CI, el portátil de un revisor) sin instalar
+// cada runtime. No relaja la soberanía: solo declara qué backends existen; el filtro de
+// sensitive sigue eligiendo únicamente candidatos locales. (Portado de hidra.mjs.)
+const ASSUMED = new Set((process.env.HIDRA_ASSUME_AVAILABLE || "").split(",").map((x) => x.trim()).filter(Boolean));
+
 function available(backend) {
+  if (ASSUMED.has(backend)) return true;
   const a = policy.availability[backend];
   if (!a) return false;
   if (a.cmd && !cmdExists(a.cmd)) return false;
